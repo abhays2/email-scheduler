@@ -21,12 +21,7 @@ const createEmail = async (req, res, next) => {
     }
 
     const insertedEmail = await emailModel.createEmail(emailData);
-    const mandrillId = await emailService.scheduleEmail(emailData);
-    const updatedEmail = await emailModel.updateEmail(insertedEmail.id, {
-      mandrillId: mandrillId,
-    });
-
-    res.status(201).json(updatedEmail);
+    res.json(insertedEmail);
   } catch (error) {
     console.error("Error creating email:", error);
     next(error);
@@ -76,11 +71,6 @@ const updateEmail = async (req, res, next) => {
     }
 
     let updatedEmail = await emailModel.updateEmail(emailId, updateData);
-    await emailService.cancelEmail(updatedEmail.mandrillId);
-    const mandrillId = await emailService.scheduleEmail(updatedEmail);
-    updatedEmail = await emailModel.updateEmail(emailId, {
-      mandrillId: mandrillId,
-    });
     res.json(updatedEmail);
   } catch (error) {
     console.error("Error updating email:", error);
@@ -92,7 +82,6 @@ const deleteEmail = async (req, res, next) => {
   try {
     const emailId = req.params.id;
     const deletedEmail = await emailModel.deleteEmail(emailId);
-    await emailService.cancelEmail(deletedEmail.mandrillId);
     res.json(deletedEmail);
   } catch (error) {
     console.error("Error deleting email:", error);
@@ -110,20 +99,10 @@ const getFailedEmails = async (req, res, next) => {
   }
 };
 
-const handleMandrillWebhook = async (req, res, next) => {
+const sendEmail = async (req, res, next) => {
   try {
-    const webhookData = req.body;
-    if (webhookData.event === "send") {
-      const { message_id, state } = webhookData.msg;
-
-      const updatedEmail = await emailModel.updateEmailByMandrillId(
-        message_id,
-        {
-          status: state,
-        }
-      );
-      res.json(updatedEmail);
-    }
+    console.log('hii');
+    
   } catch (error) {
     console.error("Error scheduling email:", error);
     next(error);
@@ -137,5 +116,5 @@ module.exports = {
   updateEmail,
   deleteEmail,
   getFailedEmails,
-  handleMandrillWebhook,
+  sendEmail
 };

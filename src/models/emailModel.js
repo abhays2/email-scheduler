@@ -74,19 +74,18 @@ const getFailedEmails = async () => {
   }
 };
 
-const updateEmailByMandrillId = async (mandrillId, updatedData) => {
+const getScheduledEmails = async (currentTime) => {
   try {
-    updatedData.updatedAt = knex.fn.now();
-    const updatedEmail = await knex("emails")
-      .where("mandrillId", mandrillId)
-      .update(updatedData)
-      .returning("*");
-    return updatedEmail;
+    const scheduledEmails = await knex("emails")
+      .where("scheduledTime", "<=", "currentTime")
+      .select("*");
+    return scheduledEmails;
   } catch (error) {
-    console.error("Error updating email:", error);
-    throw error;
+    console.error("Error:", error);
+    throw new Error(`Error getting failed emails: ${error.message}`);
   }
 };
+
 
 module.exports = {
   createEmail,
@@ -95,5 +94,5 @@ module.exports = {
   updateEmail,
   deleteEmail,
   getFailedEmails,
-  updateEmailByMandrillId,
+  getScheduledEmails
 };
